@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timed Clicker Game with Sound</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-section {
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        #clicker {
+            padding: 30px 60px;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        #clicker:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        #clicker:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        #clicker:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: scale(1);
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #restart {
+            padding: 15px 40px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .leaderboard {
+            margin-top: 30px;
+            text-align: left;
+            display: none;
+        }
+
+        .leaderboard.show {
+            display: block;
+        }
+
+        .leaderboard h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .leaderboard-entry {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-entry.gold {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+        }
+
+        .leaderboard-entry.silver {
+            background: linear-gradient(135deg, #d4d4d4 0%, #808080 100%);
+            color: white;
+        }
+
+        .leaderboard-entry.bronze {
+            background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%);
+            color: white;
+        }
+
+        .rank {
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .score-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            margin: 0 15px;
+        }
+
+        .game-over-message {
+            font-size: 18px;
+            color: #f5576c;
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .game-over-message.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            #clicker {
+                padding: 20px 40px;
+                font-size: 20px;
+            }
+
+            .difficulty-buttons {
+                gap: 5px;
+            }
+
+            .difficulty-btn {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎮 Clicker Game</h1>
+        
+        <div class="difficulty-selector">
+            <p style="color: #666; margin-bottom: 10px; font-weight: bold;">Select Difficulty:</p>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn active" data-difficulty="easy" data-time="45">Easy (45s)</button>
+                <button class="difficulty-btn" data-difficulty="medium" data-time="30">Medium (30s)</button>
+                <button class="difficulty-btn" data-difficulty="hard" data-time="15">Hard (15s)</button>
+            </div>
+        </div>
+
+        <div class="game-section">
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Time Left</div>
+                    <div class="stat-value" id="timer">45</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">CPS</div>
+                    <div class="stat-value" id="cps">0</div>
+                </div>
+            </div>
+
+            <button id="clicker">Click Me!</button>
+            <div class="game-over-message" id="gameOverMessage"></div>
+        </div>
+
+        <button id="restart">🔄 Play Again</button>
+
+        <div class="leaderboard" id="leaderboard">
+            <h3>🏆 Top Scores</h3>
+            <div id="leaderboardList"></div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 45;
+        let gameInterval;
+        let cpsInterval;
+        let clicksThisSecond = 0;
+        let gameActive = false;
+        let currentDifficulty = 'easy';
+        let audioContext = null;
+
+        const clickerButton = document.getElementById('clicker');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const cpsDisplay = document.getElementById('cps');
+        const restartButton = document.getElementById('restart');
+        const gameOverMessage = document.getElementById('gameOverMessage');
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+        const leaderboard = document.getElementById('leaderboard');
+        const leaderboardList = document.getElementById('leaderboardList');
+
+        // Initialize audio context
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Play click sound using Web Audio API
+        function playClickSound() {
+            initAudioContext();
+            const now = audioContext.currentTime;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, now);
+            oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            
+            oscillator.start(now);
+            oscillator.stop(now + 0.1);
+        }
+
+        // Play game over sound
+        function playGameOverSound() {
+            initAudioContext();
+            const now = audioContext.currentTime;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(400, now);
+            oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+            oscillator.type = 'square';
+            
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            
+            oscillator.start(now);
+            oscillator.stop(now + 0.3);
+        }
+
+        // Update CPS (Clicks Per Second)
+        function updateCPS() {
+            cpsDisplay.textContent = clicksThisSecond.toFixed(1);
+            clicksThisSecond = 0;
+        }
+
+        function startGame() {
+            gameActive = true;
+            clickerButton.disabled = false;
+            restartButton.style.display = 'none';
+            gameOverMessage.classList.remove('show');
+            leaderboard.classList.remove('show');
+            
+            // Disable difficulty buttons during game
+            difficultyButtons.forEach(btn => btn.disabled = true);
+
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            cpsInterval = setInterval(updateCPS, 1000);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(cpsInterval);
+            gameActive = false;
+            clickerButton.disabled = true;
+            restartButton.style.display = 'inline-block';
+            playGameOverSound();
+
+            // Show game over message
+            gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
+            gameOverMessage.classList.add('show');
+
+            // Save score to leaderboard
+            saveScore(score, currentDifficulty);
+            displayLeaderboard();
+
+            // Re-enable difficulty buttons
+            difficultyButtons.forEach(btn => btn.disabled = false);
+        }
+
+        function resetGame() {
+            score = 0;
+            clicksThisSecond = 0;
+            timeLeft = parseInt(document.querySelector('.difficulty-btn.active').dataset.time);
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = timeLeft;
+            cpsDisplay.textContent = '0';
+            clickerButton.disabled = false;
+            gameOverMessage.classList.remove('show');
+            startGame();
+        }
+
+        // Leaderboard functions
+        function saveScore(finalScore, difficulty) {
+            const scores = JSON.parse(localStorage.getItem('clickerScores') || '[]');
+            scores.push({
+                score: finalScore,
+                difficulty: difficulty,
+                date: new Date().toLocaleDateString()
+            });
+            scores.sort((a, b) => b.score - a.score);
+            localStorage.setItem('clickerScores', JSON.stringify(scores.slice(0, 10)));
+        }
+
+        function displayLeaderboard() {
+            const scores = JSON.parse(localStorage.getItem('clickerScores') || '[]');
+            if (scores.length === 0) return;
+
+            leaderboardList.innerHTML = '';
+            scores.forEach((entry, index) => {
+                const div = document.createElement('div');
+                div.className = 'leaderboard-entry';
+                
+                if (index === 0) div.classList.add('gold');
+                else if (index === 1) div.classList.add('silver');
+                else if (index === 2) div.classList.add('bronze');
+
+                div.innerHTML = `
+                    <span class="rank">#${index + 1}</span>
+                    <div class="score-info">
+                        <span>${entry.score} clicks</span>
+                        <span style="font-size: 12px; opacity: 0.8;">${entry.difficulty} • ${entry.date}</span>
+                    </div>
+                `;
+                leaderboardList.appendChild(div);
+            });
+
+            leaderboard.classList.add('show');
+        }
+
+        // Event listeners
+        clickerButton.addEventListener('click', () => {
+            if (!gameActive && timeLeft === parseInt(document.querySelector('.difficulty-btn.active').dataset.time)) {
+                startGame();
+            }
+
+            if (gameActive) {
+                score++;
+                clicksThisSecond += 1;
+                scoreDisplay.textContent = score;
+                playClickSound();
+
+                // Add a subtle visual feedback
+                clickerButton.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    clickerButton.style.transform = 'scale(1)';
+                }, 50);
+            }
+        });
+
+        restartButton.addEventListener('click', resetGame);
+
+        // Difficulty selection
+        difficultyButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!gameActive) {
+                    difficultyButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentDifficulty = btn.dataset.difficulty;
+                    timeLeft = parseInt(btn.dataset.time);
+                    timerDisplay.textContent = timeLeft;
+                }
+            });
+        });
+
+        // Initial setup
+        timeLeft = 45;
+        timerDisplay.textContent = timeLeft;
+    </script>
+</body>
+</html>
